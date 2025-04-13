@@ -72,6 +72,10 @@
                 cli/args
                 :initial-value args)))
 
+;; Get argument from args list
+(defun get-argument (argument args)
+    (second (first (remove-if-not (lambda (arg) (equal (first arg) argument)) args))))
+
 ;; CODE
 
 ;; Predictor type
@@ -105,4 +109,4 @@
               (- (predictor-size predictor) 1))))
 
 ;; Run main program
-(format t "~A~%" (read-args))
+(format t "~A~%" (get-argument :alias (read-args)))
