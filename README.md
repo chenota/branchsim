@@ -1,6 +1,6 @@
 # Branch Predictor Simulator
 
-This program simulates an n-bit branch predictor for a series of taken/not-taken ground truth values. I wrote this simulator to assist with a homework where I had to figure out a series of aliased branch patterns that resulted in positive interference.
+This program simulates an n-bit branch predictor for a series of taken/not-taken ground truth values and reports the results.
 
 ## How to Use
 
