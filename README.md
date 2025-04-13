@@ -16,7 +16,7 @@ I wrote my own modular argument parser as part of this program; it definetly nee
 
 | Argument | Description | Default Value |
 |-|-|-|
-| `pattern` | **(Positional)** Repeating taken/not-taken pattern as a string. Character 'T' denotes taken, while character 'F' denotes not taken. | |
+| `pattern` | **(Positional)** Repeating taken/not-taken pattern as a string. Character 'T' denotes taken, while character 'N' denotes not taken. | |
 | `bits` | **(Optional)** Number of bits for the branch predictor. | 2 |
 | `iters` | **(Optional)** Number of individual prediction trials. | 10 |
 | `alias` | **(Optional)** Second taken/not-taken pattern as a string. Will be interleaved with `pattern`. | |
@@ -24,3 +24,18 @@ I wrote my own modular argument parser as part of this program; it definetly nee
 
 ## Example Outputs
 
+```
+$ ./branch.lisp "TTTN" --iters 1000
+Hits    748
+Misses  252
+Rate    75.%
+```
+
+```
+$ ./branch.lisp "TT" --alias "NN" --iters 4 --verbose | column -t -s $'\t'
+Predictor  Prediction  Ground Truth  Hit Rate
+00         N           T             .0%
+01         N           N             50.%
+00         N           T             33.%
+01         N           N             50.%
+```
