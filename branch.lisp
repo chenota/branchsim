@@ -4,7 +4,9 @@
 
 ;; String of taken not taken to list
 (defun parse-t-nt-string (string)
-    (mapcar (lambda (c) (char= c #\T)) (coerce string 'list)))
+    (mapcar (lambda (c) (char= c #\T)) 
+            (remove-if-not (lambda (c) (or (char= c #\T) (char= c #\N))) 
+                           (coerce string 'list))))
 
 ;; Options
 (defparameter cli/args '(
