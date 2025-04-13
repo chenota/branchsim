@@ -9,10 +9,10 @@
 ;; Options
 (defparameter cli/args '(
     (:pattern :positional :handler parse-t-nt-string)
-    (:bits :short #\b :long "bits" :handler parse-integer :default 2)
-    (:iters :short #\i :long "iters" :handler parse-integer :default 1000)
-    (:alias :short #\a :long "alias" :handler parse-t-nt-string)
-    (:verbose :short #\v :long "verbose")
+    (:bits :name "bits" :handler parse-integer :default 2)
+    (:iters :name "iters" :handler parse-integer :default 1000)
+    (:alias :name "alias" :handler parse-t-nt-string)
+    (:verbose :name "verbose")
 ))
 
 ;; Extract row from cli/options that matches
@@ -21,7 +21,7 @@
                     (cond (acc acc)
                           ((funcall test new) new)
                           (t nil)))
-            (remove-if (lambda (row) (parameter-p :positional row)) cli/args)
+            cli/args
             :initial-value nil))
 
 ;; Extract value of parameter in param list
@@ -42,6 +42,7 @@
 
 ;; Read command line arguments
 (defun read-args ()
+           ;; Read supplied arguments
     (let ((args (first (reduce (lambda (acc arg)
                     ;; Read current accumulator
                     (destructuring-bind 
@@ -50,15 +51,9 @@
                               ;; Trying to read argument to field
                         (cond (read-to
                                (list (cons (list (first read-to) (funcall (parameter-v :handler read-to) arg)) l) nil positionals))
-                              ;; Reading long argument
+                              ;; Reading optional argument
                               ((string-prefix-p "--" arg) 
-                               (let ((row (get-row (lambda (row) (string= (parameter-v :long row) (subseq arg 2))))))
-                                    (if (parameter-p :handler row)
-                                        (list l row positionals)
-                                        (list (cons (list (first row) t) l) nil positionals))))
-                              ;; Reading short argument
-                              ((string-prefix-p "-" arg)
-                               (let ((row (get-row (lambda (row) (char= (parameter-v :short row) (char arg 1))))))
+                               (let ((row (get-row (lambda (row) (string= (parameter-v :name row) (subseq arg 2))))))
                                     (if (parameter-p :handler row)
                                         (list l row positionals)
                                         (list (cons (list (first row) t) l) nil positionals))))
@@ -69,6 +64,7 @@
             :initial-value (list nil 
                                  nil 
                                  (remove-if-not (lambda (row) (parameter-p :positional row)) cli/args))))))
+        ;; Add default values for non-supplied arguments
         (reduce (lambda (acc row)
                         (if (member (first row) args :key #'first)
                             acc
