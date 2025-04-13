@@ -2,12 +2,16 @@
 
 ;; ARGUMENT PARSER
 
+;; String of taken not taken to list
+(defun parse-t-nt-string (string)
+    (mapcar (lambda (c) (char= c #\T)) (coerce string 'list)))
+
 ;; Options
 (defparameter cli/args '(
-    (:pattern :positional :handler identity)
+    (:pattern :positional :handler parse-t-nt-string)
     (:bits :short #\b :long "bits" :handler parse-integer :default 2)
     (:iters :short #\i :long "iters" :handler parse-integer :default 1000)
-    (:alias :short #\a :long "alias" :handler identity)
+    (:alias :short #\a :long "alias" :handler parse-t-nt-string)
     (:verbose :short #\v :long "verbose")
 ))
 
@@ -76,7 +80,7 @@
 (defun get-argument (argument args)
     (second (first (remove-if-not (lambda (arg) (equal (first arg) argument)) args))))
 
-;; CODE
+;; BRANCH PREDICTOR CODE
 
 ;; Predictor type
 (defstruct predictor size state)
@@ -109,4 +113,52 @@
               (- (predictor-size predictor) 1))))
 
 ;; Run main program
-(format t "~A~%" (get-argument :alias (read-args)))
+       ;; Parse command line arguments
+(let* ((args (read-args))
+       ;; Regular pattern
+       (pattern-default (get-argument :pattern args))
+       ;; Alias pattern
+       (alias (get-argument :alias args))
+       ;; Pattern to test
+       (pattern (if alias
+                    ;; Combine alias and original pattern
+                    (loop for i from 0 below (max (length pattern-default) (length alias)) by 1 appending 
+                          (list (nth (mod i (length pattern-default)) pattern-default) 
+                                (nth (mod i (length alias)) alias)))
+                    ;; Only use default pattern
+                    pattern-default))
+       ;; Number of iterations
+       (iters (get-argument :iters args))
+       ;; Verbose
+       (verbose (get-argument :verbose args))
+       ;; Loop variables
+       (predictor (new-predictor (get-argument :bits args)))
+       (tally 0))
+      ;; Verbose print
+      (if verbose (format t "Predictor~CPrediction~CGround Truth~CHit Rate~%" #\tab #\tab #\tab) nil)
+      ;; Count correct predictions
+      (loop for i from 0 below iters by 1 do 
+                ;; Get ground truth and prediction
+                (let ((ground-truth (nth (mod i (length pattern)) pattern))
+                        (prediction (predict predictor)))
+                    ;; If prediction was correct, update tally
+                    (if (eq ground-truth prediction)
+                        (setq tally (+ tally 1))
+                        nil)
+                    ;; Verbose print
+                    (if verbose
+                        (format t 
+                                "~V,'0B~C~C~C~C~C~2F%~%" 
+                                (get-argument :bits args) 
+                                (predictor-state predictor) 
+                                #\tab 
+                                (if prediction #\T #\N) 
+                                #\tab 
+                                (if ground-truth #\T #\N) 
+                                #\tab 
+                                (* 100 (/ tally (+ i 1))))
+                        nil)
+                    ;; Update predictior w/ ground truth
+                    (setq predictor (update predictor ground-truth))))
+      ;; Print results
+      (if verbose nil (format t "Hits~C~D~%Misses~C~D~%Rate~C~2F%~%" #\tab tally #\tab (- iters tally) #\tab (* 100 (/ tally iters)))))
