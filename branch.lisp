@@ -10,7 +10,7 @@
 (defparameter cli/args '(
     (:pattern :positional :handler parse-t-nt-string)
     (:bits :name "bits" :handler parse-integer :default 2)
-    (:iters :name "iters" :handler parse-integer :default 1000)
+    (:iters :name "iters" :handler parse-integer :default 10)
     (:alias :name "alias" :handler parse-t-nt-string)
     (:verbose :name "verbose")
 ))
